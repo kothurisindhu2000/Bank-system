@@ -1,0 +1,259 @@
+import json
+import os
+
+class Account:
+    accounts = []
+
+    def __init__(self, acc_id, name, balance=0):
+        self.acc_id = acc_id
+        self.name = name
+        self.balance = balance
+        self.transactions = []
+        Account.accounts.append(self)
+
+    def deposit(self, amount):
+        self.balance += amount
+        self.transactions.append(("Deposit", amount))
+
+    def withdraw(self, amount):
+        if amount <= self.balance:
+            self.balance -= amount
+            self.transactions.append(("Withdraw", amount))
+        else:
+            print("Insufficient funds")
+
+    def display_info(self):
+        print(f"ID: {self.acc_id}, Name: {self.name}, Balance: ${self.balance:.2f}")
+
+    def to_dict(self):
+        return {
+            'acc_id': self.acc_id,
+            'name': self.name,
+            'balance': self.balance,
+            'transactions': self.transactions
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        acc = cls(data['acc_id'], data['name'], data['balance'])
+        acc.transactions = data.get('transactions', [])
+        return acc
+
+    @classmethod
+    def save_to_file(cls, filename="accounts.json"):
+        with open(filename, "w") as f:
+            json.dump([acc.to_dict() for acc in cls.accounts], f, indent=2)
+
+    @classmethod
+    def load_from_file(cls, filename="accounts.json"):
+        cls.accounts = []
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                data = json.load(f)
+                for item in data:
+                    cls.from_dict(item)
+
+class User:
+    users = []
+
+    def __init__(self, username, password, role, account_id=None):
+        self.username = username
+        self.password = password
+        self.role = role
+        self.account_id = account_id
+        User.users.append(self)
+
+    def to_dict(self):
+        return {
+            'username': self.username,
+            'password': self.password,
+            'role': self.role,
+            'account_id': self.account_id
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(data['username'], data['password'], data['role'], data.get('account_id'))
+
+    @classmethod
+    def save_to_file(cls, filename="users.json"):
+        with open(filename, "w") as f:
+            json.dump([user.to_dict() for user in cls.users], f, indent=2)
+
+    @classmethod
+    def load_from_file(cls, filename="users.json"):
+        cls.users = []
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                data = json.load(f)
+                for item in data:
+                    cls.from_dict(item)
+
+def find_account_by_id(acc_id):
+    for acc in Account.accounts:
+        if acc.acc_id == acc_id:
+            return acc
+    return None
+
+def login():
+    username = input("Enter Username: ")
+    password = input("Enter Password: ")
+    for user in User.users:
+        if user.username == username and user.password == password:
+            return user
+    return None
+
+def create_account():
+    acc_id = input("Enter Account ID: ")
+    name = input("Enter Account Holder Name: ")
+    balance = float(input("Enter Initial Balance: "))
+    Account(acc_id, name, balance)
+    Account.save_to_file()
+    print("✅ Account created successfully!\n")
+
+def display_all_accounts():
+    if not Account.accounts:
+        print("No accounts found.\n")
+    else:
+        for acc in Account.accounts:
+            acc.display_info()
+
+def deposit_to_account():
+    acc_id = input("Enter Account ID to deposit: ")
+    acc = find_account_by_id(acc_id)
+    if acc:
+        amount = float(input("Enter amount to deposit: "))
+        acc.deposit(amount)
+        Account.save_to_file()
+        print("✅ Deposit successful!\n")
+    else:
+        print("Account not found.\n")
+
+def withdraw_from_account():
+    acc_id = input("Enter Account ID to withdraw: ")
+    acc = find_account_by_id(acc_id)
+    if acc:
+        amount = float(input("Enter amount to withdraw: "))
+        acc.withdraw(amount)
+        Account.save_to_file()
+        print("✅ Withdrawal processed!\n")
+    else:
+        print("Account not found.\n")
+
+def view_transaction_history():
+    acc_id = input("Enter Account ID to view transactions: ")
+    acc = find_account_by_id(acc_id)
+    if acc:
+        if acc.transactions:
+            print(f"\nTransaction History for {acc.name} (ID: {acc.acc_id}):")
+            for t in acc.transactions:
+                print(f"{t[0]} of ${t[1]:.2f}")
+        else:
+            print("No transactions yet.")
+    else:
+        print("Account not found.")
+
+def create_customer_user():
+    acc_id = input("Enter new Account ID: ")
+    name = input("Enter Account Holder Name: ")
+    username = input("Choose a Username for Customer: ")
+    password = input("Set a Password: ")
+    balance = float(input("Enter Initial Balance: "))
+    Account(acc_id, name, balance)
+    User(username, password, "customer", account_id=acc_id)
+    Account.save_to_file()
+    User.save_to_file()
+    print("✅ Customer account and login created successfully!\n")
+
+def delete_account():
+    acc_id = input("Enter Account ID to delete: ")
+    acc = find_account_by_id(acc_id)
+    if acc:
+        Account.accounts.remove(acc)
+        User.users = [u for u in User.users if u.account_id != acc_id]
+        Account.save_to_file()
+        User.save_to_file()
+        print("✅ Account deleted successfully!\n")
+    else:
+        print("Account not found.\n")
+
+def customer_menu(user):
+    acc = find_account_by_id(user.account_id)
+    if not acc:
+        print("Account not found.")
+        return
+    while True:
+        print("\n--- Customer Menu ---")
+        print("1. Deposit")
+        print("2. Withdraw")
+        print("3. View Transaction History")
+        print("4. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            amount = float(input("Enter amount to deposit: "))
+            acc.deposit(amount)
+            Account.save_to_file()
+        elif choice == "2":
+            amount = float(input("Enter amount to withdraw: "))
+            acc.withdraw(amount)
+            Account.save_to_file()
+        elif choice == "3":
+            view_transaction_history()
+        elif choice == "4":
+            break
+        else:
+            print("Invalid option.")
+
+def admin_menu():
+    while True:
+        print("\n--- Admin Menu ---")
+        print("1. Create Account")
+        print("2. Display All Accounts")
+        print("3. Deposit")
+        print("4. Withdraw")
+        print("5. View Transaction History")
+        print("6. Save Data")
+        print("7. Create Customer User")
+        print("8. Delete Account")
+        print("9. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            create_account()
+        elif choice == "2":
+            display_all_accounts()
+        elif choice == "3":
+            deposit_to_account()
+        elif choice == "4":
+            withdraw_from_account()
+        elif choice == "5":
+            view_transaction_history()
+        elif choice == "6":
+            Account.save_to_file()
+            User.save_to_file()
+            print("✅ Data saved.")
+        elif choice == "7":
+            create_customer_user()
+        elif choice == "8":
+            delete_account()
+        elif choice == "9":
+            break
+        else:
+            print("Invalid option.")
+
+# Initial load
+Account.load_from_file()
+User.load_from_file()
+if not any(user.username == "admin" for user in User.users):
+    User("admin", "admin123", "admin")
+    User.save_to_file()
+
+# Login
+print("\n--- Welcome to Bank Management System ---")
+logged_in_user = login()
+if logged_in_user:
+    if logged_in_user.role == "admin":
+        admin_menu()
+    else:
+        customer_menu(logged_in_user)
+else:
+    print("❌ Invalid login. Program exiting.")
