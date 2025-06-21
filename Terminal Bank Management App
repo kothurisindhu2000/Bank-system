@@ -109,7 +109,7 @@ def create_account():
     balance = float(input("Enter Initial Balance: "))
     Account(acc_id, name, balance)
     Account.save_to_file()
-    print("✅ Account created successfully!\n")
+    print("Account created successfully!\n")
 
 def display_all_accounts():
     if not Account.accounts:
@@ -125,7 +125,7 @@ def deposit_to_account():
         amount = float(input("Enter amount to deposit: "))
         acc.deposit(amount)
         Account.save_to_file()
-        print("✅ Deposit successful!\n")
+        print("Deposit successful!\n")
     else:
         print("Account not found.\n")
 
@@ -136,7 +136,7 @@ def withdraw_from_account():
         amount = float(input("Enter amount to withdraw: "))
         acc.withdraw(amount)
         Account.save_to_file()
-        print("✅ Withdrawal processed!\n")
+        print("Withdrawal processed!\n")
     else:
         print("Account not found.\n")
 
@@ -163,7 +163,7 @@ def create_customer_user():
     User(username, password, "customer", account_id=acc_id)
     Account.save_to_file()
     User.save_to_file()
-    print("✅ Customer account and login created successfully!\n")
+    print("Customer account and login created successfully!\n")
 
 def delete_account():
     acc_id = input("Enter Account ID to delete: ")
@@ -173,7 +173,7 @@ def delete_account():
         User.users = [u for u in User.users if u.account_id != acc_id]
         Account.save_to_file()
         User.save_to_file()
-        print("✅ Account deleted successfully!\n")
+        print("Account deleted successfully!\n")
     else:
         print("Account not found.\n")
 
@@ -230,7 +230,7 @@ def admin_menu():
         elif choice == "6":
             Account.save_to_file()
             User.save_to_file()
-            print("✅ Data saved.")
+            print("Data saved.")
         elif choice == "7":
             create_customer_user()
         elif choice == "8":
@@ -256,4 +256,4 @@ if logged_in_user:
     else:
         customer_menu(logged_in_user)
 else:
-    print("❌ Invalid login. Program exiting.")
+    print("Invalid login. Program exiting.")
