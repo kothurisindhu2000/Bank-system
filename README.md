@@ -20,32 +20,32 @@ The Bank Management System is a console-based application written in Python. It 
 ## Main Classes and Functions
 1. Account Class
 Represents individual bank accounts.
-#### Attributes:
--	acc_id: Unique ID for the account
--	name: Account holder’s name
--	balance: Current balance in the account
--	transactions: List of transaction tuples
--	accounts: Class-level list storing all accounts
-#### Methods:
--	deposit(amount)
--	withdraw(amount)
--	display_info()
--	to_dict() and from_dict() for JSON serialization
--	save_to_file() and load_from_file() to handle persistent storage
+  #### Attributes:
+   -	acc_id: Unique ID for the account
+   -	name: Account holder’s name
+   -	balance: Current balance in the account
+   -	transactions: List of transaction tuples
+   -	accounts: Class-level list storing all accounts
+  #### Methods:
+   -	deposit(amount)
+   -	withdraw(amount)
+   -	display_info()
+   -	to_dict() and from_dict() for JSON serialization
+   -	save_to_file() and load_from_file() to handle persistent storage
 2. User Class
 Represents system users (admin or customer).
-Attributes:
--	username: User login name
--	password: User password
--	role: Either “admin” or “customer”
--	account_id: Linked account ID (for customers)
--	users: Class-level list storing all users
-Methods:
--	to_dict() and from_dict() for JSON operations
--	save_to_file() and load_from_file() to handle persistent storage
+ Attributes:
+  -	username: User login name
+  -	password: User password
+  -	role: Either “admin” or “customer”
+  -	account_id: Linked account ID (for customers)
+  -	users: Class-level list storing all users
+ Methods:
+  -	to_dict() and from_dict() for JSON operations
+  -	save_to_file() and load_from_file() to handle persistent storage
 3. Helper Functions
--	find_account_by_id(acc_id) – Finds an account by ID
--	login() – Prompts login and returns a matching user object
+ -	find_account_by_id(acc_id) – Finds an account by ID
+ -	login() – Prompts login and returns a matching user object
  
 ### User Interfaces
 ##### Admin Menu
