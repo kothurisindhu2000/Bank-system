@@ -1,5 +1,9 @@
 import json
 import os
+import random
+import time
+import smtplib
+from email.mime.text import MIMEText
 
 class Account:
     accounts = []
@@ -56,11 +60,12 @@ class Account:
 class User:
     users = []
 
-    def __init__(self, username, password, role, account_id=None):
+    def __init__(self, username, password, role, account_id=None, email=None):
         self.username = username
         self.password = password
         self.role = role
         self.account_id = account_id
+        self.email = email
         User.users.append(self)
 
     def to_dict(self):
@@ -68,12 +73,13 @@ class User:
             'username': self.username,
             'password': self.password,
             'role': self.role,
-            'account_id': self.account_id
+            'account_id': self.account_id,
+            'email' : self.email
         }
 
     @classmethod
     def from_dict(cls, data):
-        return cls(data['username'], data['password'], data['role'], data.get('account_id'))
+        return cls(data['username'], data['password'], data['role'], data.get('account_id'), data.get('email'))
 
     @classmethod
     def save_to_file(cls, filename="users.json"):
@@ -95,21 +101,122 @@ def find_account_by_id(acc_id):
             return acc
     return None
 
+def generate_account_id():
+    if not Account.accounts:
+        return "ACC1001"
+    
+    max_id = 1000
+    for acc in Account.accounts:
+        if acc.acc_id.startswith("ACC"):
+            try:
+                number = int(acc.acc_id[3:])
+                if number > max_id:
+                    max_id = number
+            except ValueError:
+                continue
+    return f"ACC{max_id + 1}"
+
+def username_exists(username):
+    for user in User.users:
+        if user.username == username:
+            return True
+        return False
+    
+def send_otp_email(receiver_email, otp):
+    sender_email = os.getenv("BANK_APP_EMAIL")
+    sender_password = os.getenv("BANK_APP_EMAIL_PASSWORD")
+
+    if not sender_email or not sender_password:
+        return False
+
+    try:
+        subject = "Your Banking System OTP"
+        body = f"Your OTP is: {otp}. It will expire in 60 seconds."
+
+        msg = MIMEText(body)
+        msg["Subject"] = subject
+        msg["From"] = sender_email
+        msg["To"] = receiver_email
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        return True
+    except Exception as e:
+        print(f"Failed to send OTP email: {e}")
+        return False    
+        
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+def verify_otp(user):
+    # 🚫 Block login if no email
+    if not user.email:
+        print("Email is required for OTP login. Please set your email.")
+        return False
+
+    otp = generate_otp()
+    expiry_time = time.time() + 60  # 60 seconds
+
+    # 🚫 If email sending fails → stop login
+    if not send_otp_email(user.email, otp):
+        print("Failed to send OTP email. Please check configuration.")
+        return False
+
+    print(f"OTP has been sent to {user.email}")
+
+    attempts = 3
+    while attempts > 0:
+        if time.time() > expiry_time:
+            print("OTP has expired. Please login again.\n")
+            return False
+
+        entered_otp = input("Enter OTP: ").strip()
+
+        if entered_otp == otp:
+            print("OTP verified successfully.\n")
+            return True
+        else:
+            attempts -= 1
+            print(f"Invalid OTP. Attempts left: {attempts}")
+
+    print("OTP verification failed.\n")
+    return False
+
 def login():
-    username = input("Enter Username: ")
-    password = input("Enter Password: ")
+    username = input("Enter Username: ").strip()
+    password = input("Enter Password: ").strip()
     for user in User.users:
         if user.username == username and user.password == password:
-            return user
+            print("Username and password verified.")
+            if verify_otp(user):
+                return user
+            else:
+                return None
     return None
 
 def create_account():
-    acc_id = input("Enter Account ID: ")
-    name = input("Enter Account Holder Name: ")
-    balance = float(input("Enter Initial Balance: "))
+    acc_id = generate_account_id()
+    name = input("Enter Account Holder Name: ").strip()
+
+    if not name:
+        print("Account holder name cannot be empty.\n")
+        return
+
+    try:
+        balance = float(input("Enter Initial Balance: "))
+        if balance < 0:
+            print("Initial balance cannot be negative.\n")
+            return
+    except ValueError:
+        print("Please enter a valid number for balance.\n")
+        return
+
     Account(acc_id, name, balance)
     Account.save_to_file()
-    print("Account created successfully!\n")
+    print(f"Account created successfully! Account ID: {acc_id}\n")
 
 def display_all_accounts():
     if not Account.accounts:
@@ -121,8 +228,16 @@ def display_all_accounts():
 def deposit_to_account():
     acc_id = input("Enter Account ID to deposit: ")
     acc = find_account_by_id(acc_id)
+
     if acc:
-        amount = float(input("Enter amount to deposit: "))
+        try:
+            amount = float(input("Enter amount to deposit: "))
+            if amount <= 0:
+                print("Deposit amount must be positive.\n")
+                return
+        except ValueError:
+            print("Please enter a alid number.\n")
+            return
         acc.deposit(amount)
         Account.save_to_file()
         print("Deposit successful!\n")
@@ -154,16 +269,46 @@ def view_transaction_history():
         print("Account not found.")
 
 def create_customer_user():
-    acc_id = input("Enter new Account ID: ")
-    name = input("Enter Account Holder Name: ")
-    username = input("Choose a Username for Customer: ")
-    password = input("Set a Password: ")
-    balance = float(input("Enter Initial Balance: "))
+    acc_id = generate_account_id()
+    name = input("Enter Account Holder Name: ").strip()
+    username = input("Choose a Username for Customer: ").strip()
+    password = input("Set a Password: ").strip()
+    email = input("Enter Customer Email: ").strip()
+
+    if not name:
+        print("Account holder name cannot be empty.\n")
+        return
+
+    if not username:
+        print("Username cannot be empty.\n")
+        return
+
+    if username_exists(username):
+        print("Username already exists. Please choose another one.\n")
+        return
+
+    if not password:
+        print("Password cannot be empty.\n")
+        return
+
+    if not email:
+        print("Email cannot be empty.\n")
+        return
+
+    try:
+        balance = float(input("Enter Initial Balance: "))
+        if balance < 0:
+            print("Initial balance cannot be negative.\n")
+            return
+    except ValueError:
+        print("Please enter a valid number for balance.\n")
+        return
+
     Account(acc_id, name, balance)
-    User(username, password, "customer", account_id=acc_id)
+    User(username, password, "customer", account_id=acc_id, email=email)
     Account.save_to_file()
     User.save_to_file()
-    print("Customer account and login created successfully!\n")
+    print(f"Customer account and login created successfully! Account ID: {acc_id}\n")
 
 def delete_account():
     acc_id = input("Enter Account ID to delete: ")
@@ -243,8 +388,16 @@ def admin_menu():
 # Initial load
 Account.load_from_file()
 User.load_from_file()
-if not any(user.username == "admin" for user in User.users):
-    User("admin", "admin123", "admin")
+
+admin_user = next((user for user in User.users if user.username == "admin"), None)
+
+if not admin_user:
+    email = input("Set admin email for OTP: ").strip()
+    User("admin", "admin123", "admin", email=email)
+    User.save_to_file()
+elif not admin_user.email:
+    email = input("Enter email for existing admin (for OTP): ").strip()
+    admin_user.email = email
     User.save_to_file()
 
 # Login

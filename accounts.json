@@ -1,0 +1,62 @@
+[
+  {
+    "acc_id": "ACC1001",
+    "name": "Priya",
+    "balance": 100.0,
+    "transactions": []
+  },
+  {
+    "acc_id": "ACC1002",
+    "name": "Sindhu",
+    "balance": 1000.0,
+    "transactions": []
+  },
+  {
+    "acc_id": "ACC1003",
+    "name": "Ria",
+    "balance": 10.0,
+    "transactions": []
+  },
+  {
+    "acc_id": "ACC1004",
+    "name": "Ria",
+    "balance": 80.0,
+    "transactions": [
+      [
+        "Withdraw",
+        10.0
+      ],
+      [
+        "Withdraw",
+        10.0
+      ],
+      [
+        "Deposit",
+        -100.0
+      ]
+    ]
+  },
+  {
+    "acc_id": "ACC1005",
+    "name": "Sk",
+    "balance": 100.0,
+    "transactions": []
+  },
+  {
+    "acc_id": "ACC1006",
+    "name": "Sindhu",
+    "balance": 1000.0,
+    "transactions": []
+  },
+  {
+    "acc_id": "ACC1007",
+    "name": "Anusha",
+    "balance": 8000.0,
+    "transactions": [
+      [
+        "Deposit",
+        3000.0
+      ]
+    ]
+  }
+]

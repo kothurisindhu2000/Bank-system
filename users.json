@@ -3,6 +3,21 @@
     "username": "admin",
     "password": "admin123",
     "role": "admin",
-    "account_id": null
+    "account_id": null,
+    "email": "kothurisindhu2010@gmail.com"
+  },
+  {
+    "username": "Sk2000",
+    "password": "SK123",
+    "role": "customer",
+    "account_id": "ACC1006",
+    "email": "sindhu.kothuri@gmail.com"
+  },
+  {
+    "username": "Anusha10",
+    "password": "Anusha@10",
+    "role": "customer",
+    "account_id": "ACC1007",
+    "email": "kothurisindhu10@gmail.com"
   }
 ]
