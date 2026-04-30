@@ -120,7 +120,7 @@ def username_exists(username):
     for user in User.users:
         if user.username == username:
             return True
-        return False
+    return False
     
 def send_otp_email(receiver_email, otp):
     sender_email = os.getenv("BANK_APP_EMAIL")
